@@ -1,0 +1,68 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          servicetest
+# Required-Start:    $local_fs $network $remote_fs $syslog
+# Required-Stop:     $local_fs $network $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Example initscript
+# Description:       This file should be used to construct scripts to be
+#                    placed in /etc/init.d.
+### END INIT INFO
+
+# Do NOT "set -e"
+
+DESC="ServiceTest"
+NAME=servicetest
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+
+PROJECTPATH=/root/servicetest/bin/Debug
+BINARY=servicetest.exe
+PIDFILE=/tmp/servicetest.pid
+
+
+start() {
+    mono-service "-d:$PROJECTPATH" "-l:$PIDFILE" "$PROJECTPATH/$BINARY"
+}
+
+stop() {
+    kill `cat $PIDFILE`
+}
+
+
+status -p "$PIDFILE" "$NAME" >/dev/null 2>&1
+running=$?
+
+
+case "$1" in
+    start)
+        [ $running -eq 0 ] && exit 0
+        start
+        ;;
+
+    stop)
+        [ $running -eq 0 ] || exit 0
+        stop
+        ;;
+
+    restart|force-reload)
+        stop
+        start
+        ;;
+
+    status)
+        status -p "$PIDFILE" "$NAME"
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop|status}"
+        exit 2
+esac
+
+exit $?
